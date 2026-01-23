@@ -1,0 +1,5 @@
+:root { --gold: #C9A227; }
+.text-gold { color: var(--gold); }
+.card { border-radius: 16px; }
+.btn { border-radius: 12px; }
+.table > :not(caption) > * > * { vertical-align: middle; }
