@@ -4,12 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $shopName ?? config('goldenperfume.shop_name') }} - متجر العطور</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/icon.svg') }}">
+    <link rel="alternate icon" href="{{ asset('images/logo.png') }}">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/site.css') }}">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-lg navbar-light">
     <div class="container d-flex align-items-center">
         <a class="navbar-brand fw-bold d-flex align-items-center gap-2 me-2" href="{{ route('home') }}">
             <img src="{{ asset('images/logo.png') }}" alt="Golden Perfume" height="50">
@@ -53,11 +56,11 @@
 <!-- Search Modal -->
 <div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background: rgba(15, 23, 42, .95); backdrop-filter: blur(10px); border: 1px solid rgba(148, 163, 184, .2);">
+<div class="modal-content">
             <div class="modal-body p-4">
                 <form action="{{ route('products.index') }}" method="GET" class="d-flex gap-2">
-                    <input type="search" name="search" class="form-control form-control-lg bg-transparent text-white border-secondary" placeholder="ابحث عن عطر..." autofocus>
-                    <button type="submit" class="btn btn-warning">بحث</button>
+<input type="search" name="search" class="form-control form-control-lg" placeholder="ابحث عن عطر..." autofocus>
+<button type="submit" class="btn btn-dark">بحث</button>
                 </form>
             </div>
         </div>

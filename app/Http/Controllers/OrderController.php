@@ -66,13 +66,8 @@ class OrderController extends Controller
 
         $promoCode = strtoupper(trim((string) $request->input('promo_code', '')));
         $discount = 0;
-        if ($promoCode === 'GP10') {
-            $discount = round($total * 0.10, 2);
-        } elseif ($promoCode === 'GP5') {
-            $discount = round($total * 0.05, 2);
-        } elseif ($promoCode === 'WELCOME10') {
-            $discount = min($total, 10);
-        }
+        // Discount disabled
+        
         $grandTotal = max(0, round($total - $discount, 2));
 
         $minOrder = (float) config('goldenperfume.min_order_total', 0);
@@ -82,22 +77,17 @@ class OrderController extends Controller
             ]);
         }
 
-        $shippingFee = (float) config('goldenperfume.shipping_fee', 0);
-        $freeThreshold = (float) config('goldenperfume.free_shipping_threshold', 0);
-        $shipping = ($freeThreshold > 0 && $grandTotal >= $freeThreshold) ? 0 : $shippingFee;
+        $shippingFee = 0; // Free shipping
+        $shipping = 0;
         $finalTotal = max(0, round($grandTotal + $shipping, 2));
 
         $note = $validated['customer_note'] ?? null;
         if ($promoCode !== '') {
+             // Keep tracking if user tried a code, but value is 0
             $promoInfo = "Promo {$promoCode}: -{$discount}";
             $note = $note ? ($note . " | " . $promoInfo) : $promoInfo;
         }
-        if ($shipping > 0) {
-            $shipInfo = "Shipping: +{$shipping}";
-            $note = $note ? ($note . " | " . $shipInfo) : $shipInfo;
-        } else {
-            $note = $note ? ($note . " | Shipping: FREE") : "Shipping: FREE";
-        }
+        $note = $note ? ($note . " | Shipping: FREE") : "Shipping: FREE";
 
         $order = Order::create([
             'customer_name' => $validated['customer_name'],

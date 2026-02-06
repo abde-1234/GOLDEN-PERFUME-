@@ -30,9 +30,8 @@
   const mobileCartTotal = document.getElementById('mobileCartTotal');
   const orderBtn = document.getElementById('whatsappOrderBtn');
   const clearCartBtn = document.getElementById('clearCartBtn');
-  const promoInput = document.getElementById('promoCodeInput');
-  const applyPromoBtn = document.getElementById('applyPromoBtn');
   const toastBanner = document.getElementById('cartToast');
+  const cartTotalHeader = document.getElementById('cartTotalHeader');
 
   const custName = document.getElementById('custName');
   const custPhone = document.getElementById('custPhone');
@@ -40,17 +39,6 @@
   const custNote = document.getElementById('custNote');
 
   let cart = loadCart();
-  const PROMO_KEY = 'gp_promo_v1';
-  let promoCode = (localStorage.getItem(PROMO_KEY) || '').trim();
-
-  function computeDiscount(code, total) {
-    code = String(code || '').toUpperCase().trim();
-    if (!code) return 0;
-    if (code === 'GP10') return Math.round(total * 0.10 * 100) / 100;
-    if (code === 'GP5') return Math.round(total * 0.05 * 100) / 100;
-    if (code === 'WELCOME10') return Math.min(total, 10);
-    return 0;
-  }
 
   function cartItems() {
     return Object.entries(cart)
@@ -77,7 +65,7 @@
       customer_phone: phone,
       customer_address: address,
       customer_note: note,
-      promo_code: promoCode,
+      promo_code: '',
       items: items.map((it) => ({
         product_id: Number(it.id),
         qty: it.qty,
@@ -88,75 +76,74 @@
   function renderCart() {
     const items = cartItems();
     const total = calcTotal(items);
-    const discount = computeDiscount(promoCode, total);
-    const grandTotal = Math.max(0, Math.round((total - discount) * 100) / 100);
-    var shippingFeeCfg = Number(window.GP?.shippingFee || 0);
-    var freeThreshold = Number(window.GP?.freeShippingThreshold || 0);
-    var minOrder = Number(window.GP?.minOrderTotal || 0);
-    var shipping = grandTotal >= freeThreshold ? 0 : shippingFeeCfg;
-    var totalWithShipping = Math.round((grandTotal + shipping) * 100) / 100;
+    
+    // No discount, No shipping
+    const grandTotal = total;
 
     if (!items.length) {
       cartBody.innerHTML = '<tr><td colspan="4" class="text-muted">السلة فارغة.</td></tr>';
-    } else {
-      cartBody.innerHTML = items.map((it) => {
-        const sub = it.product.price * it.qty;
-        return `
-          <tr data-cart-row="${it.id}">
-            <td>
-              <div class="fw-bold">${escapeHtml(it.product.name)}</div>
-              <div class="small text-muted">${formatMoney(it.product.price)} ${window.GP.currency}</div>
-            </td>
-            <td>
-              <input class="form-control form-control-sm" type="number" min="1" step="1" value="${it.qty}" data-qty-input="${it.id}">
-            </td>
-            <td class="fw-bold">${formatMoney(sub)} ${window.GP.currency}</td>
-            <td>
-              <button class="btn btn-sm btn-outline-danger" type="button" data-remove="${it.id}">×</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+      cartTotal.innerText = '0.00';
+      if (cartTotalHeader) cartTotalHeader.innerText = '0.00';
+      if(mobileCartBar) mobileCartBar.classList.add('d-none');
+      if(orderBtn) orderBtn.disabled = true;
+      if(clearCartBtn) clearCartBtn.disabled = true;
+      return;
     }
 
-    cartTotal.textContent = formatMoney(total);
-    var headerTotalEl = document.getElementById('cartTotalHeader');
-    if (headerTotalEl) {
-      headerTotalEl.textContent = formatMoney(total);
-    }
-    var cartDiscountEl = document.getElementById('cartDiscount');
-    var cartGrandTotalEl = document.getElementById('cartGrandTotal');
-    var cartShippingEl = document.getElementById('cartShipping');
-    if (cartDiscountEl) cartDiscountEl.textContent = formatMoney(discount);
-    if (cartGrandTotalEl) cartGrandTotalEl.textContent = formatMoney(grandTotal);
-    if (cartShippingEl) cartShippingEl.textContent = formatMoney(shipping);
+    let html = '';
+    items.forEach((it) => {
+      const lineTotal = it.product.price * it.qty;
+      html += `
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="${it.product.image_url}" class="rounded border" width="40" height="40" style="object-fit:cover">
+              <div class="text-truncate" style="max-width:120px;" title="${it.product.name}">${it.product.name}</div>
+            </div>
+          </td>
+          <td class="text-center">
+            <div class="input-group input-group-sm flex-nowrap" style="width: 80px; margin: 0 auto;">
+              <button class="btn btn-outline-secondary px-1" onclick="window.GP.updateQty('${it.id}', -1)">-</button>
+              <input type="text" class="form-control text-center px-0" value="${it.qty}" readonly>
+              <button class="btn btn-outline-secondary px-1" onclick="window.GP.updateQty('${it.id}', 1)">+</button>
+            </div>
+          </td>
+          <td class="text-end text-nowrap">${formatMoney(lineTotal)}</td>
+          <td class="text-center">
+            <button class="btn btn-link text-danger p-0" onclick="window.GP.removeItem('${it.id}')">
+              &times;
+            </button>
+          </td>
+        </tr>
+      `;
+    });
 
-    // Update mobile cart bar
-    if (mobileCartBar && mobileCartTotal) {
-      mobileCartTotal.textContent = formatMoney(totalWithShipping) + ' ' + window.GP.currency;
-      if (items.length > 0) {
-        mobileCartBar.classList.add('visible');
-      } else {
-        mobileCartBar.classList.remove('visible');
-      }
-    }
-
-    var navBadge = document.getElementById('navCartCount');
-    if (navBadge) {
-      var count = items.reduce((s, it) => s + it.qty, 0);
-      navBadge.textContent = String(count);
-      navBadge.classList.toggle('d-none', count <= 0);
-    }
+    cartBody.innerHTML = html;
+    cartTotal.innerText = formatMoney(total);
+    if (cartTotalHeader) cartTotalHeader.innerText = formatMoney(total);
+    
+    // Update mobile bar
+    if(mobileCartBar) mobileCartBar.classList.remove('d-none');
+    if(mobileCartTotal) mobileCartTotal.innerText = formatMoney(total);
+    
+    if(orderBtn) orderBtn.disabled = false;
+    if(clearCartBtn) clearCartBtn.disabled = false;
   }
 
-  function escapeHtml(str) {
-    return String(str)
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
+  window.GP.updateQty = function(id, delta) {
+    const cur = Number(cart[String(id)]) || 1;
+    const next = Math.max(1, cur + (Number(delta) || 0));
+    cart[String(id)] = next;
+    saveCart(cart);
+    renderCart();
+  };
+
+  window.GP.removeItem = function(id) {
+    delete cart[String(id)];
+    saveCart(cart);
+    renderCart();
+    showToast('تمت إزالة المنتج من السلة ❌');
+  };
 
   // Add to cart buttons
   document.querySelectorAll('[data-add-to-cart]').forEach((btn) => {
@@ -204,19 +191,10 @@
     renderCart();
   });
 
-  applyPromoBtn?.addEventListener('click', () => {
-    promoCode = (promoInput?.value || '').trim();
-    localStorage.setItem(PROMO_KEY, promoCode);
-    renderCart();
-  });
-  promoInput?.addEventListener('input', () => {
-    promoCode = (promoInput?.value || '').trim();
-    localStorage.setItem(PROMO_KEY, promoCode);
-    renderCart();
-  });
-  if (promoInput) {
-    promoInput.value = promoCode;
-  }
+  // Clean up any stale promo-related state (removed feature)
+  try {
+    localStorage.removeItem('gp_promo_v1');
+  } catch (_) {}
 
   // Update whatsapp link when customer data changes
   [custName, custPhone, custAddress, custNote].forEach((el) => {
@@ -241,8 +219,7 @@
     // Minimum order validation (before shipping)
     var minOrder = Number(window.GP?.minOrderTotal || 0);
     var total = calcTotal(items);
-    var discount = computeDiscount(promoCode, total);
-    var grand = Math.max(0, Math.round((total - discount) * 100) / 100);
+    var grand = Math.max(0, Math.round(total * 100) / 100);
     if (minOrder && grand < minOrder) {
       alert('الحد الأدنى للطلب هو ' + formatMoney(minOrder) + ' ' + window.GP.currency + '.');
       return;

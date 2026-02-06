@@ -30,9 +30,11 @@
         @foreach($products as $p)
             <div class="col-md-4 product-card" data-category="{{ $p->category }}">
                 <div class="card overflow-hidden h-100 border-0 shadow-sm" style="transition: transform 0.2s;">
-                    <div class="position-relative">
-                        <img src="{{ asset($p->image_path) }}" alt="{{ $p->name }}" class="w-100" style="height:280px; object-fit:cover;">
-                        <span class="position-absolute top-0 end-0 m-3 badge {{ $p->category === 'pack' ? 'bg-warning text-dark' : 'bg-dark text-white' }} px-3 py-2 rounded-pill">
+                    <div class="position-relative bg-white d-flex align-items-center justify-content-center" style="height: 320px; border-bottom: 1px solid rgba(0,0,0,0.03);">
+                        <img src="{{ $p->image_path ? asset($p->image_path) : asset('images/logo.png') }}" 
+                             alt="{{ $p->name }}" 
+                             style="max-height: 85%; max-width: 85%; object-fit: contain;">
+                        <span class="position-absolute top-0 end-0 m-3 badge {{ $p->category === 'pack' ? 'bg-warning text-dark' : 'bg-dark text-white' }} px-3 py-2 rounded-pill shadow-sm">
                             {{ $p->category === 'pack' ? 'Le Pack' : 'عطر' }}
                         </span>
                     </div>
@@ -62,86 +64,77 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table align-middle table-hover">
-                        <thead class="table-light">
-                        <tr>
-                            <th class="border-0 rounded-start">🧴 المنتج</th>
-                            <th class="border-0 text-center" style="width:160px;">🔢 الكمية</th>
-                            <th class="border-0 text-end" style="width:120px;">💵 السعر</th>
-                            <th class="border-0 rounded-end text-center" style="width:60px;"></th>
-                        </tr>
+                    <table class="table align-middle">
+                        <thead class="bg-light small text-muted text-uppercase">
+                            <tr>
+                                <th class="border-0 py-3 ps-4" style="font-weight: 600;">المنتج</th>
+                                <th class="border-0 py-3 text-center" style="font-weight: 600;">الكمية</th>
+                                <th class="border-0 py-3 text-end" style="font-weight: 600;">المجموع</th>
+                                <th class="border-0 py-3 text-end pe-4" style="width: 50px;"></th>
+                            </tr>
                         </thead>
                         <tbody id="cartBody" class="border-top-0">
-                            <tr><td colspan="4" class="text-center py-5 text-muted">السلة فارغة.</td></tr>
+                            <tr><td colspan="4" class="text-center py-5 text-muted">السلة فارغة. ابدأ التسوق الآن!</td></tr>
                         </tbody>
                         <tfoot class="border-top">
                             <tr>
-                                <td colspan="2" class="fw-bold text-end pt-3">الإجمالي:</td>
-                                <td class="fw-bold text-end pt-3 fs-5 text-primary"><span id="cartTotal">0.00</span> {{ $currency }}</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td colspan="2" class="text-end">الخصم:</td>
-                                <td class="text-end text-success">- <span id="cartDiscount">0.00</span> {{ $currency }}</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td colspan="2" class="text-end">رسوم التوصيل:</td>
-                                <td class="text-end"><span id="cartShipping">0.00</span> {{ $currency }}</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td colspan="2" class="fw-bold text-end">الإجمالي بعد الخصم:</td>
-                                <td class="fw-bold text-end fs-5"><span id="cartGrandTotal">0.00</span> {{ $currency }}</td>
+                                <td colspan="2" class="text-end pt-4">
+                                    <span class="text-muted small">الإجمالي الكلي</span>
+                                </td>
+                                <td class="text-end pt-4">
+                                    <span class="fw-bold fs-4 text-dark"><span id="cartTotal">0.00</span> <span class="fs-6 text-muted">{{ $currency }}</span></span>
+                                </td>
                                 <td></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
                 
-                <div class="text-end mt-2">
-                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3" type="button" id="clearCartBtn">🗑️ إفراغ السلة</button>
-                </div>
-                
-                <div class="mt-3 d-flex align-items-center gap-2">
-                    <input id="promoCodeInput" class="form-control" placeholder="أدخل كود الخصم (مثال: GP10)" style="max-width: 260px;">
-                    <button class="btn btn-outline-dark rounded-pill" type="button" id="applyPromoBtn">تطبيق الخصم</button>
-                    <span class="small-muted">أكواد متاحة: GP10 (10%)، GP5 (5%)، WELCOME10 (-10)</span>
-                </div>
-                <div class="small-muted mt-2">
-                    التوصيل: مجاني إذا تجاوز الإجمالي {{ number_format((float) config('goldenperfume.free_shipping_threshold'), 2) }} {{ $currency }}. رسوم التوصيل القياسية {{ number_format((float) config('goldenperfume.shipping_fee'), 2) }} {{ $currency }}.
+                <div class="d-flex justify-content-between align-items-center mt-3 px-2">
+                    <button class="btn btn-link text-danger text-decoration-none btn-sm px-0" type="button" id="clearCartBtn">
+                        <i class="bi bi-trash me-1"></i> إفراغ السلة
+                    </button>
+                    <div class="text-success small fw-bold">
+                        <i class="bi bi-check-circle-fill me-1"></i> توصيل مجاني
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm p-4 sticky-top form-card" style="top: 100px; z-index: 1020;">
-                <h2 class="h5 section-title mb-3">📦 إتمام الطلب</h2>
-                <div class="small-muted mb-4">أدخل بيانات التوصيل.</div>
-
-                <div class="mb-2">
-                    <label class="form-label">👤 الاسم</label>
-                    <input id="custName" class="form-control" placeholder="الاسم الكامل">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">📞 الهاتف</label>
-                    <input id="custPhone" class="form-control" placeholder="06xxxxxxxx">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">🏠 المدينة/العنوان</label>
-                    <input id="custAddress" class="form-control" placeholder="مثال: مراكش - حي ...">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">📝 ملاحظة (اختياري)</label>
-                    <textarea id="custNote" class="form-control" rows="3" placeholder="أي معلومات إضافية..."></textarea>
+            <div class="card border-0 shadow-sm p-4 sticky-top rounded-4" style="top: 20px; z-index: 100;">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <span class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px;">1</span>
+                    <h2 class="h5 fw-bold mb-0">معلومات التوصيل</h2>
                 </div>
 
-                <button class="btn btn-success w-100" type="button" id="whatsappOrderBtn">
-                    ✅ إرسال الطلب
+                <div class="form-floating mb-3">
+                    <input id="custName" class="form-control rounded-3" placeholder="الاسم الكامل">
+                    <label for="custName" class="text-muted">الاسم الكامل</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input id="custPhone" class="form-control rounded-3" placeholder="رقم الهاتف">
+                    <label for="custPhone" class="text-muted">رقم الهاتف</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input id="custAddress" class="form-control rounded-3" placeholder="العنوان">
+                    <label for="custAddress" class="text-muted">العنوان / المدينة</label>
+                </div>
+
+                <div class="form-floating mb-4">
+                    <textarea id="custNote" class="form-control rounded-3" placeholder="ملاحظات" style="height: 100px"></textarea>
+                    <label for="custNote" class="text-muted">ملاحظات إضافية (اختياري)</label>
+                </div>
+
+                <button class="btn btn-dark w-100 py-3 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" type="button" id="whatsappOrderBtn">
+                    <span>تأكيد الطلب</span>
+                    <i class="bi bi-arrow-left"></i>
                 </button>
 
-                <div class="small-muted mt-2">
-                    سيتم تواصلنا لتأكيد تفاصيل التوصيل.
+                <div class="text-center mt-3">
+                    <small class="text-muted">الدفع عند الاستلام 💵</small>
                 </div>
             </div>
         </div>
@@ -169,6 +162,7 @@
                 'id' => $p->id,
                 'name' => $p->name,
                 'price' => (float) $p->price,
+                'image_url' => $p->image_path ? asset($p->image_path) : asset('images/logo.png'),
             ];
         });
     @endphp

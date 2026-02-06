@@ -2,37 +2,28 @@
 
 @section('content')
     <div class="admin-layout">
-        <aside class="admin-sidebar">
-            <div class="fw-bold mb-2">إدارة المتجر</div>
-            <ul class="nav flex-column gap-1">
-                <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin') ? 'active' : '' }}" href="{{ route('admin') }}"><span>🏠</span> <span class="label">لوحة الإدارة</span></a></li>
-                <li class="nav-item"><a class="nav-link active" href="{{ route('admin.orders.index') }}"><span>🧾</span> <span class="label">الطلبات</span></a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('admin.products.index') }}"><span>📦</span> <span class="label">المنتجات</span></a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('admin.comments.index') }}"><span>💬</span> <span class="label">التعليقات</span></a></li>
-            </ul>
-        </aside>
+        @include('admin.partials.sidebar')
+
         <section>
-            <div class="admin-topbar d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-                <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-outline-dark btn-sm rounded-pill" type="button" id="toggleSidebarBtn">☰</button>
-                    <h1 class="h5 fw-bold mb-0">الطلبات</h1>
-                    <span class="badge bg-dark text-light">الإجمالي: {{ $orders->total() }}</span>
+            <div class="admin-hero p-4 mb-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 fw-bold mb-2">إدارة الطلبات</h1>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-25">🧾 الإجمالي: {{ $orders->total() }}</span>
+                    </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <a href="{{ route('admin.products.create') }}" class="btn btn-dark btn-sm rounded-pill px-3">+ إضافة منتج</a>
-                    <a href="{{ route('admin.orders.export', request()->query()) }}" class="btn btn-outline-dark btn-sm rounded-pill px-3">تصدير CSV</a>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge text-bg-success">موثّق</span>
-                        <span class="small-muted">المدير</span>
-                    </div>
+                    <a href="{{ route('admin.orders.export', request()->query()) }}" class="btn btn-light rounded-pill px-4 fw-bold text-dark">
+                        ⬇ تصدير CSV
+                    </a>
                 </div>
             </div>
 
-            <form method="get" class="card border-0 shadow-sm p-3 mb-3">
-                <div class="row g-2 align-items-end">
+            <form method="get" class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+                <div class="row g-3 align-items-end">
                     <div class="col-md-3">
-                        <label class="form-label small">الحالة</label>
-                        <select name="status" class="form-select">
+                        <label class="form-label small fw-bold text-muted">الحالة</label>
+                        <select name="status" class="form-select border-light bg-light">
                             <option value="">الكل</option>
                             <option value="new" @selected(request('status')==='new')>جديد</option>
                             <option value="processing" @selected(request('status')==='processing')>قيد التجهيز</option>
@@ -41,23 +32,25 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small">بحث</label>
+                        <label class="form-label small fw-bold text-muted">بحث</label>
                         <div class="input-group">
-                            <input type="text" name="q" class="form-control" value="{{ request('q') }}" placeholder="الاسم أو الهاتف">
-                            <button class="btn btn-outline-dark" type="submit">بحث</button>
-                            <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">مسح</a>
+                            <input type="text" name="q" class="form-control border-light bg-light" value="{{ request('q') }}" placeholder="الاسم أو الهاتف">
+                            <button class="btn btn-primary" type="submit">بحث</button>
+                            @if(request('q') || request('status') || request('from') || request('to'))
+                                <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">مسح</a>
+                            @endif
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label small">نطاق التاريخ</label>
+                        <label class="form-label small fw-bold text-muted">نطاق التاريخ</label>
                         <div class="d-flex gap-2">
-                            <input type="date" name="from" class="form-control" value="{{ request('from') }}">
-                            <input type="date" name="to" class="form-control" value="{{ request('to') }}">
+                            <input type="date" name="from" class="form-control border-light bg-light" value="{{ request('from') }}">
+                            <input type="date" name="to" class="form-control border-light bg-light" value="{{ request('to') }}">
                         </div>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label small">عدد الصفوف</label>
-                        <select name="per_page" class="form-select" onchange="this.form.submit()">
+                        <label class="form-label small fw-bold text-muted">عدد الصفوف</label>
+                        <select name="per_page" class="form-select border-light bg-light" onchange="this.form.submit()">
                             @foreach([10,25,50] as $pp)
                                 <option value="{{ $pp }}" @selected((int)request('per_page', 10) === $pp)>{{ $pp }}</option>
                             @endforeach
@@ -66,53 +59,49 @@
                 </div>
             </form>
 
-            <div class="card border-0 shadow-sm p-3">
+            <div class="card border-0 shadow-sm p-3 rounded-4">
                 @if($orders->isEmpty())
-                    <div class="text-muted">لا توجد طلبات بعد.</div>
+                    <div class="text-muted p-4 text-center">لا توجد طلبات بعد.</div>
                 @else
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="small-muted">عرض {{ $orders->count() }} من {{ $orders->total() }}</div>
-                        <div></div>
-                    </div>
                     <div class="table-responsive">
-                        <table class="table align-middle table-hover">
-                            <thead>
+                        <table class="table align-middle table-hover mb-0">
+                            <thead class="bg-light">
                             <tr>
-                                <th>#</th>
-                                <th>الزبون</th>
-                                <th>الهاتف</th>
-                                <th>الإجمالي</th>
-                                <th>الحالة</th>
-                                <th>تاريخ الإنشاء</th>
-                                <th style="width:120px;"></th>
+                                <th class="border-0 rounded-start">#</th>
+                                <th class="border-0">الزبون</th>
+                                <th class="border-0">الهاتف</th>
+                                <th class="border-0">الإجمالي</th>
+                                <th class="border-0">الحالة</th>
+                                <th class="border-0">تاريخ الإنشاء</th>
+                                <th class="border-0 rounded-end" style="width:120px;"></th>
                             </tr>
                             </thead>
                             <tbody>
                             @foreach($orders as $order)
                                 <tr>
-                                    <td>{{ $order->id }}</td>
-                                    <td>{{ $order->customer_name }}</td>
+                                    <td class="fw-bold text-muted">{{ $order->id }}</td>
+                                    <td class="fw-bold">{{ $order->customer_name }}</td>
                                     <td>{{ $order->customer_phone }}</td>
-                                    <td>{{ number_format($order->total, 2) }}</td>
+                                    <td class="fw-bold text-primary">{{ number_format($order->total, 2) }}</td>
                                     <td>
                                         @switch($order->status)
-                                            @case('new') <span class="badge text-bg-warning">جديد</span> @break
-                                            @case('processing') <span class="badge text-bg-info">قيد التجهيز</span> @break
-                                            @case('done') <span class="badge text-bg-success">مكتمل</span> @break
-                                            @case('cancelled') <span class="badge text-bg-secondary">ملغى</span> @break
+                                            @case('new') <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">جديد</span> @break
+                                            @case('processing') <span class="badge bg-info text-dark px-3 py-2 rounded-pill">قيد التجهيز</span> @break
+                                            @case('done') <span class="badge bg-success px-3 py-2 rounded-pill">مكتمل</span> @break
+                                            @case('cancelled') <span class="badge bg-secondary px-3 py-2 rounded-pill">ملغى</span> @break
                                             @default {{ $order->status }}
                                         @endswitch
                                     </td>
-                                    <td>{{ $order->created_at?->format('Y-m-d H:i') }}</td>
+                                    <td class="text-muted small">{{ $order->created_at?->format('Y-m-d H:i') }}</td>
                                     <td>
-                                        <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3">عرض</a>
+                                        <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-light border rounded-pill px-3 fw-bold text-primary">عرض</a>
                                     </td>
                                 </tr>
                             @endforeach
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3">
+                    <div class="mt-4 px-2">
                         {{ $orders->onEachSide(1)->links() }}
                     </div>
                 @endif
@@ -120,22 +109,3 @@
         </section>
     </div>
 @endsection
-
-@push('scripts')
-<script>
-(function(){
-  var root = document.querySelector('.admin-layout');
-  var btn = document.getElementById('toggleSidebarBtn');
-  var KEY='adminSidebarCollapsed';
-  try{
-    var collapsed = localStorage.getItem(KEY)==='1';
-    if(collapsed){ root?.classList.add('collapsed'); }
-    btn?.addEventListener('click', function(){
-      root?.classList.toggle('collapsed');
-      var isCollapsed = root?.classList.contains('collapsed');
-      localStorage.setItem(KEY, isCollapsed ? '1' : '0');
-    });
-  }catch(e){}
-})();
-</script>
-@endpush
